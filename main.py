@@ -10,6 +10,7 @@ prices = df[['SKU.2', 'STORE.2', 'Average Price']]
 
 # --- Cleaning Data ---
 sales = sales.dropna(subset=['Week', 'STORE', 'SKU_SIZE'])
+prices.columns = ['SKU', 'STORE', 'Average Price']
 
 
 # ==========================================
@@ -78,30 +79,47 @@ coverage_analysis['Enough_Buying'] = coverage_analysis['Buying_Gap'] >= 0
 # print('Total sold products: ', total_sold_products, '\nTotal buied products: ', total_buied_products)
 
 # ==========================================
+# 3rd Question - What would be the increase in value if the company were able to record potential sales?
+# ==========================================
+
+price_of_miss = missed_sales.merge(prices, how='left')
+price_of_miss['Missed_sales_euro'] = price_of_miss['Avg_Sales'] * price_of_miss['Average Price']
+price_of_miss_groupped = price_of_miss.groupby(['SKU', 'STORE'])['Missed_sales_euro'].sum().reset_index()
+total_loases = price_of_miss_groupped['Missed_sales_euro'].sum()
+
+# ==========================================
 # EXECUTIVE SUMMARY: THE STOCKOUT PARADOX
 # ==========================================
-print("\n" + "="*50)
-print("EXECUTIVE SUMMARY: THE STOCKOUT PARADOX")
-print("="*50)
+def executive_summary_q1_q2_q3():
+    print("\n" + "="*50)
+    print("EXECUTIVE SUMMARY: THE STOCKOUT PARADOX")
+    print("="*50)
 
-# 1. Macro Level (Global Inefficiency)
-total_leftover = total_buied_products - total_sold_products
-print("\n--- MACRO LEVEL (Global Network) ---")
-print(f"Total Produced/Bought: {total_buied_products:,.0f} units")
-print(f"Total Actually Sold:   {total_sold_products:,.0f} units")
-print(f"Total Unsold Stock:    {total_leftover:,.0f} units (Massive Overstock)")
+    # 1. Macro Level (Global Inefficiency)
+    total_leftover = total_buied_products - total_sold_products
+    print("\n--- MACRO LEVEL (Global Network) ---")
+    print(f"Total Produced/Bought: {total_buied_products:,.0f} units")
+    print(f"Total Actually Sold:   {total_sold_products:,.0f} units")
+    print(f"Total Unsold Stock:    {total_leftover:,.0f} units (Massive Overstock)")
+    print(f"Total Loses:           {total_loases:,.2f} euros")
 
-# 2. Micro Level (Local Failures)
-buyer_errors = (coverage_analysis['Enough_Buying'] == False).sum()
-dist_errors = (coverage_analysis['Enough_Buying'] == True).sum()
+    # print('Total loses:          ',round(total_loases, 2),'euros')
 
-print("\n--- MICRO LEVEL (Root Cause of Stockouts) ---")
-print(f"Total Stockout Events:    {len(coverage_analysis)}")
-print(f"1. Buyer/Planning Errors: {buyer_errors} cases (Bought wrong items for wrong stores)")
-print(f"2. Distribution Errors:   {dist_errors} cases (Bought enough, but didn't deliver to shelf)")
 
-# 3. Business Conclusion
-print("\n--- BUSINESS CONCLUSION ---")
-print("The company has a massive OVERSTOCK globally (>7,300 unsold units),")
-print("but still loses sales because buyers allocate the WRONG sizes/models to the WRONG stores.")
-print("="*50 + "\n")
+    # 2. Micro Level (Local Failures)
+    buyer_errors = (coverage_analysis['Enough_Buying'] == False).sum()
+    dist_errors = (coverage_analysis['Enough_Buying'] == True).sum()
+
+    print("\n--- MICRO LEVEL (Root Cause of Stockouts) ---")
+    print(f"Total Stockout Events:    {len(coverage_analysis)}")
+    print(f"1. Buyer/Planning Errors: {buyer_errors} cases (Bought wrong items for wrong stores)")
+    print(f"2. Distribution Errors:   {dist_errors} cases (Bought enough, but didn't deliver to shelf)")
+
+    # 3. Business Conclusion
+    print("\n--- BUSINESS CONCLUSION ---")
+    print("The company has a massive OVERSTOCK globally (>7,300 unsold units),")
+    print("but still loses sales because buyers allocate the WRONG sizes/models to the WRONG stores.")
+    print("="*50 + "\n")
+
+
+executive_summary_q1_q2_q3()
