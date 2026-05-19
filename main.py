@@ -1,5 +1,7 @@
 import pandas as pd
 import math
+import numpy as np
+import pprint
 
 # --- Loading Data ---
 df = pd.read_excel('Case_Study.xlsx', 'Database Seasonal', header=2)
@@ -33,13 +35,34 @@ missed_sales = sales_stock_out.merge(avg_sales, how='left')
 missed_sales = missed_sales.dropna() 
 missed_sales = missed_sales[missed_sales['Avg_Sales'] > 0]
 
+# missed_sales['Avg_Sales'] = np.ceil(missed_sales['Avg_Sales'])
+
+# missed_sales_sum_qty = missed_sales['Avg_Sales'].sum()
+
+# print("Total Missed Sales (Units): ", missed_sales_sum_qty)
+# print("#"*15)
+# pprint.pp(missed_sales)
+
+# Находим разницу между средним спросом и тем, что успели продать на неделе стокаута
+missed_sales['Real_Missed'] = missed_sales['Avg_Sales'] - missed_sales['Sales Qty']
+
+# Если продали больше среднего, упущенных продаж нет (отсекаем отрицательные значения)
+missed_sales.loc[missed_sales['Real_Missed'] < 0, 'Real_Missed'] = 0
+
+# Суммируем точные дробные значения
+total_missed_fractional = missed_sales['Real_Missed'].sum()
+
+# Округляем только финальный итог
+missed_sales_sum_qty = round(total_missed_fractional)
+
+print("Total Missed Sales (Units): ", missed_sales_sum_qty)
+
 # --- Total Missed sales ---
 missed_sales_sum_qty = math.ceil(missed_sales['Avg_Sales'].sum()) 
 missed_sales_sum_qty_not_round_up = missed_sales['Avg_Sales'].sum()
 
 # --- Missed Sales grouped by STORE and SKU_SIZE ---
 missed_sales_by_sku_store = missed_sales.groupby(['STORE', 'SKU_SIZE'])['Avg_Sales'].sum().reset_index() 
-
 
 # ==========================================
 # 2nd Question 
@@ -122,4 +145,4 @@ def executive_summary_q1_q2_q3():
     print("="*50 + "\n")
 
 
-executive_summary_q1_q2_q3()
+# executive_summary_q1_q2_q3()
